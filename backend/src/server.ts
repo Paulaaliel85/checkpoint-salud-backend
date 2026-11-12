@@ -4,6 +4,7 @@ import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { env } from "./config/env.js";
 import { usuariosRouter } from "./routes/usuarios.js";
 import { prisma } from "./lib/prisma.js";
 import { autenticar, permitirRoles } from "./middlewares/auth.js";
@@ -11,9 +12,10 @@ import { aptosRouter } from "./routes/aptos.js";
 import { turnosRouter } from "./routes/turnos.js";
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = env.PORT;
 
-app.use(cors());
+// Solo acepta requests desde el frontend configurado en .env
+app.use(cors({origin: env.FRONTEND_URL })); 
 app.use(express.json());
 
 app.use("/api/aptos", aptosRouter);
@@ -106,23 +108,14 @@ app.post("/api/auth/login", async (req, res) => {
       return;
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-
-    if (!jwtSecret) {
-      console.error("ERROR LOGIN: JWT_SECRET no está configurado.");
-
-      res.status(500).json({
-        mensaje: "El servicio de autenticación no está configurado.",
-      });
-      return;
-    }
+    const jwtSecret = env.JWT_SECRET; 
 
     const token = jwt.sign(
       { rol: usuario.rol },
       jwtSecret,
       {
         subject: usuario.id,
-        expiresIn: "2h",
+        expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"],
       },
     );
 
@@ -667,7 +660,7 @@ app.post(
   },
 );
 
-// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor de CheckPoint Salud en http://localhost:${PORT}`);
 });
+

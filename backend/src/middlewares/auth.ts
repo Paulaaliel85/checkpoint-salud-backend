@@ -1,5 +1,6 @@
 
 import type { NextFunction, Request, Response } from "express";
+import { env } from "../config/env.js";
 import jwt from "jsonwebtoken";
 
 export type Rol = "CLINICA" | "EMPRESA" | "ADMIN" | "PACIENTE";
@@ -21,7 +22,7 @@ const ROLES_VALIDOS: Rol[] = ["CLINICA", "EMPRESA", "ADMIN", "PACIENTE"];
 
 // Verifica el token. Sin sesión válida responde 401.
 export function autenticar(req: Request, res: Response, next: NextFunction) {
-  const jwtSecret = process.env.JWT_SECRET;
+  const jwtSecret = env.JWT_SECRET;
 
   if (!jwtSecret) {
     res.status(500).json({
