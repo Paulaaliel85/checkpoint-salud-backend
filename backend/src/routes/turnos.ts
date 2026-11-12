@@ -328,3 +328,33 @@ turnosRouter.patch(
     }
   },
 );
+
+
+// CLÍNICA: obtener turnos asignados.
+turnosRouter.get(
+  "/",
+  autenticar,
+  permitirRoles("CLINICA"),
+  async (_req, res) => {
+    try {
+      const turnos = await prisma.turno.findMany({
+        include: {
+          paciente: {
+            include: {
+              empresa: true,
+            },
+          },
+          sede: true,
+        },
+      });
+
+      res.json(turnos);
+    } catch (error) {
+      console.error("Error al obtener turnos:", error);
+
+      res.status(500).json({
+        error: "Error al obtener turnos",
+      });
+    }
+  },
+);
