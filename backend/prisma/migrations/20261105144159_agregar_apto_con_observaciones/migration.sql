@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "EstadoAptitud" ADD VALUE 'APTO_CON_OBSERVACIONES';
