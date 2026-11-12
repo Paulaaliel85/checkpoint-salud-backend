@@ -1,9 +1,10 @@
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import PanelPagina from '../../components/PanelPagina.vue'
 import { apiFetch } from '../../services/api'
 import { formatearFecha, formatearHora } from '../../utils/fechas'
+import { conectarSocket } from '../../services/socket'
 import type {  SolicitudApi, SolicitudesResponse, TurnoApi } from '../../types/turnos.ts'
 
 // Estados reactivos para solicitudes y turnos, esperan un valor inicial vacío y se llenarán con datos de la API
@@ -21,9 +22,9 @@ const busqueda = ref('')
 const fechasAsignadas = ref<Record<string, string>>({})
 const procesandoId = ref('')
 
-async function cargarDatos() { //función que carga solicitudes y turnos desde la API y maneja errores
+async function cargarDatos(silencio = false) { //función que carga solicitudes y turnos desde la API y maneja errores
   try {
-    cargando.value = true
+    if (!silencio) cargando.value = true
     error.value = ''
     
     //dos consultas en simultaneo 
@@ -183,7 +184,19 @@ const estilos: Record<string, string> = {
   CANCELADO: 'bg-red-50 text-red-700',
 }
 
-onMounted(cargarDatos) //cuando el componente se monta, carga los datos iniciales
+let socket: ReturnType<typeof conectarSocket> = null
+const alLlegarSolicitud = () => cargarDatos(true)
+
+onMounted(() => {
+  cargarDatos()
+  socket = conectarSocket()
+  socket?.on('solicitud:nueva', alLlegarSolicitud)
+})
+
+onUnmounted(() => {
+  socket?.off('solicitud:nueva', alLlegarSolicitud)
+})
+
 </script>
 
 <template>

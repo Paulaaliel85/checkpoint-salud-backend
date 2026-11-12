@@ -21,7 +21,8 @@
     "joi": "^18.3.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.5.0",
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "socket.io": "^4.8.4"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

@@ -2,6 +2,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import http from "http";
+import { iniciarSocket } from "./socket.js";
 import { env } from "./config/env.js";
 import { usuariosRouter } from "./routes/usuarios.js";
 import { prisma } from "./lib/prisma.js";
@@ -11,6 +13,7 @@ import { aptosRouter } from "./routes/aptos.js";
 import { turnosRouter } from "./routes/turnos.js";
 import { empresasRouter } from "./routes/empresas.js";
 import { pacientesRouter } from "./routes/pacientes.js";
+
 
 const app = express();
 const PORT = env.PORT;
@@ -81,7 +84,10 @@ app.get(
   },
 );
 
-app.listen(PORT, () => {
+const servidor = http.createServer(app);
+iniciarSocket(servidor);
+
+servidor.listen(PORT, () => {
   console.log(`Servidor de CheckPoint Salud en http://localhost:${PORT}`);
 });
 

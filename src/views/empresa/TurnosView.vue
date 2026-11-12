@@ -1,6 +1,7 @@
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { conectarSocket } from '../../services/socket'
 import PanelPagina from '../../components/PanelPagina.vue'
 import { apiFetch } from '../../services/api'
 import type { EstadoTurnoEmpresa } from '../../types/empresa.ts'
@@ -152,9 +153,9 @@ const turnosFiltrados = computed(() =>
 )
 
 //funcion que carga los datos de trabajadores, turnos y sedes desde la API
-async function cargarDatos() {
-  cargando.value = true //cargando los datos
-  errorCarga.value = '' //error vacio
+async function cargarDatos(silencioso = false) {
+  if (!silencioso) cargando.value = true
+  errorCarga.value = ''
 
   try { //hago 3 peticiones directo a la api 
     const [respuestaTrabajadores, respuestaTurnos, respuestaSedes] =
@@ -263,9 +264,26 @@ async function solicitar() {
   }
 }
 
-onMounted(() => { //cuando el componente se monta, cargo los datos
+let socket: ReturnType<typeof conectarSocket> = null
+
+function alActualizarSolicitud(datos: { estado: string }) {
+  aviso.value =
+    datos.estado === 'CONFIRMADA'
+      ? 'La clínica confirmó una solicitud de turno.'
+      : 'La clínica rechazó una solicitud de turno.'
+  cargarDatos(true)
+}
+
+onMounted(() => {
   cargarDatos()
+  socket = conectarSocket()
+  socket?.on('solicitud:actualizada', alActualizarSolicitud)
 })
+
+onUnmounted(() => {
+  socket?.off('solicitud:actualizada', alActualizarSolicitud)
+})
+
 </script>
 
 <template>
@@ -291,7 +309,7 @@ onMounted(() => { //cuando el componente se monta, cargo los datos
       <button
         type="button"
         class="ml-2 font-semibold underline"
-        @click="cargarDatos"
+        @click="() => cargarDatos()"
       >
         Reintentar
       </button>

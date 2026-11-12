@@ -2,6 +2,7 @@
 import express from "express";
 import { autenticar, permitirRoles } from "../middlewares/auth.js";
 import { prisma } from "../lib/prisma.js";
+import { emitirARol, emitirAEmpresa, emitirAPaciente } from "../socket.js";
 
 export const turnosRouter = express.Router();
 
@@ -146,6 +147,8 @@ turnosRouter.post(
         },
       });
 
+      emitirARol("CLINICA", "solicitud:nueva", { id: solicitud.id });
+
       res.status(201).json({
         mensaje: "Solicitud de turno creada correctamente.",
         solicitud,
@@ -229,6 +232,7 @@ turnosRouter.patch(
 
       const solicitud = await prisma.solicitudTurno.findUnique({
         where: { id },
+        include: { paciente: { select: { empresaId: true } } },
       });
 
       if (!solicitud) {
@@ -264,6 +268,13 @@ turnosRouter.patch(
 
         return creado;
       });
+// Emitir eventos a la clínica, empresa y paciente para notificar sobre la confirmación de la solicitud y la asignación del turno.
+      emitirAEmpresa(solicitud.paciente.empresaId, "solicitud:actualizada", {
+        id: solicitud.id,
+        estado: "CONFIRMADA",
+      });
+      emitirAPaciente(solicitud.pacienteId, "turno:actualizado", {
+        id: turno.id });
 
       res.json({
         mensaje: "Solicitud confirmada y turno asignado correctamente.",
@@ -296,6 +307,7 @@ turnosRouter.patch(
 
       const solicitud = await prisma.solicitudTurno.findUnique({
         where: { id },
+        include: { paciente: { select: { empresaId: true } } },
       });
 
       if (!solicitud) {
@@ -315,6 +327,11 @@ turnosRouter.patch(
       await prisma.solicitudTurno.update({
         where: { id },
         data: { estado: "RECHAZADA" },
+      });
+
+      emitirAEmpresa(solicitud.paciente.empresaId, "solicitud:actualizada", {
+        id: solicitud.id,
+        estado: "RECHAZADA",
       });
 
       res.json({
