@@ -1,6 +1,7 @@
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { conectarSocket } from '../services/socket'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
 import { apiFetch } from '../services/api'
@@ -18,9 +19,10 @@ const cargandoApto = ref(true)
 const errorTurnos = ref('')
 const errorApto = ref('')
 
-async function obtenerTurnos() {
+async function obtenerTurnos(silencioso = false) {
   try {
-    cargandoTurnos.value = true
+    if (!silencioso) cargandoTurnos.value = true
+    errorTurnos.value = ''
 
     const respuesta = await apiFetch<RespuestaTurnos>(
       '/api/paciente/turnos',
@@ -35,9 +37,10 @@ async function obtenerTurnos() {
   }
 }
 
-async function obtenerApto() {
+async function obtenerApto(silencioso = false) {
   try {
-    cargandoApto.value = true
+    if (!silencioso) cargandoApto.value = true
+    errorApto.value = ''
 
     const respuesta = await apiFetch<RespuestaApto>(
       '/api/aptos/paciente/actual',
@@ -221,9 +224,22 @@ function cerrarSesion() {
   router.push('/login')
 }
 
+let socket: ReturnType<typeof conectarSocket> = null
+const alCambiarTurno = () => obtenerTurnos(true)
+const alCambiarApto = () => obtenerApto(true)
+
 onMounted(() => {
   obtenerTurnos()
   obtenerApto()
+
+  socket = conectarSocket()
+  socket?.on('turno:actualizado', alCambiarTurno)
+  socket?.on('apto:actualizado', alCambiarApto)
+})
+
+onUnmounted(() => {
+  socket?.off('turno:actualizado', alCambiarTurno)
+  socket?.off('apto:actualizado', alCambiarApto)
 })
 </script>
 

@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import { autenticar, permitirRoles } from "../middlewares/auth.js";
 import { prisma } from "../lib/prisma.js";
 import { EstadoAptitud } from "../generated/prisma/enums.js";
+import { emitirAPaciente } from "../socket.js";
 
 const UPLOADS = path.resolve(process.cwd(), "uploads");
 fs.mkdirSync(UPLOADS, { recursive: true });
@@ -420,6 +421,9 @@ aptosRouter.post(
 
         return creado;
       });
+
+      emitirAPaciente(pacienteId, "apto:actualizado", {});
+      emitirAPaciente(pacienteId, "turno:actualizado", {});
 
       res.status(201).json({
         mensaje: "Apto registrado.",
