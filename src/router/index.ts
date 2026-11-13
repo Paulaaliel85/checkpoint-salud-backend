@@ -84,12 +84,6 @@ const router = createRouter({
           component: () => import('../views/empresa/AptosVencimientoView.vue'),
           props: { titulo: 'Aptos y vencimientos' },
         },
-        {
-          path: 'carga-masiva',
-          name: 'empresa-carga-masiva',
-          component: () => import('../views/empresa/CargaMasivaView.vue'),
-          props: { titulo: 'Carga masiva' },
-        },
       ],
     },
     {

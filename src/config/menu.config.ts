@@ -20,7 +20,6 @@ export const menuPorRol: Record<Rol, MenuItem[]> = {
     { label: 'Trabajadores', route: '/empresa/trabajadores', icon: 'users' },
     { label: 'Turnos', route: '/empresa/turnos', icon: 'calendar' },
     { label: 'Aptos y vencimientos', route: '/empresa/aptos', icon: 'check' },
-    { label: 'Carga masiva', route: '/empresa/carga-masiva', icon: 'upload' },
   ],
   ADMIN: [
     { label: 'Inicio', route: '/admin', icon: 'home' },
